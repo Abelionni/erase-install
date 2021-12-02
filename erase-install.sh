@@ -31,6 +31,13 @@ Original version of installinstallmacos.py - Greg Neagle; GitHub munki/macadmins
 DOC
 
 ###############
+# Abelionni note:
+# For hardening, we fully disabled all capacity of this script to download third party ressources (other than macOS).
+# We deploy the script as a standalone package including installinstallmacos.py and DEPNotify 
+###############
+
+
+###############
 ## VARIABLES ##
 ###############
 
@@ -787,88 +794,88 @@ find_extra_packages() {
     done
 }
 
-get_depnotify() {
-    # grab installinstallmacos.py if not already there
-    # note this does a SHA256 checksum check and will delete the file and exit if this fails
-    if [[ -d "$depnotify_app" ]]; then
-        echo "   [get_depnotify] DEPNotify is installed ($depnotify_app)"
-    else
-        if [[ ! $no_curl ]]; then
-            echo "   [get_depnotify] Downloading DEPNotify.app..."
-            if /usr/bin/curl -L "$depnotify_download_url" -o "$workdir/DEPNotify.pkg" ; then
-                if ! installer -pkg "$workdir/DEPNotify.pkg" -target / ; then
-                    echo "   [get_depnotify] DEPNotify installation failed"
-                fi
-            else
-                echo "   [get_depnotify] DEPNotify download failed"
-            fi
-        fi
-        # check it did actually get downloaded
-        if [[ -d "$depnotify_app" ]]; then
-            echo "   [get_depnotify] DEPNotify is installed"
-            use_depnotify="yes"
-            dep_notify_quit
-        else
-            echo "   [get_depnotify] Could not download DEPNotify.app."
-        fi
-    fi
-}
+# get_depnotify() {
+#     # grab installinstallmacos.py if not already there
+#     # note this does a SHA256 checksum check and will delete the file and exit if this fails
+#     if [[ -d "$depnotify_app" ]]; then
+#         echo "   [get_depnotify] DEPNotify is installed ($depnotify_app)"
+#     else
+#         if [[ ! $no_curl ]]; then
+#             echo "   [get_depnotify] Downloading DEPNotify.app..."
+#             if /usr/bin/curl -L "$depnotify_download_url" -o "$workdir/DEPNotify.pkg" ; then
+#                 if ! installer -pkg "$workdir/DEPNotify.pkg" -target / ; then
+#                     echo "   [get_depnotify] DEPNotify installation failed"
+#                 fi
+#             else
+#                 echo "   [get_depnotify] DEPNotify download failed"
+#             fi
+#         fi
+#         # check it did actually get downloaded
+#         if [[ -d "$depnotify_app" ]]; then
+#             echo "   [get_depnotify] DEPNotify is installed"
+#             use_depnotify="yes"
+#             dep_notify_quit
+#         else
+#             echo "   [get_depnotify] Could not download DEPNotify.app."
+#         fi
+#     fi
+# }
 
-get_installinstallmacos() {
-    # grab installinstallmacos.py if not already there
-    # note this does a SHA256 checksum check and will delete the file and exit if this fails
-    if [[ ! -f "$workdir/installinstallmacos.py" || $force_installinstallmacos == "yes" ]]; then
-        if [[ ! $no_curl ]]; then
-            echo "   [get_installinstallmacos] Downloading installinstallmacos.py..."
-            # delete existing version so curl can create new file 
-            if [[ -f "$workdir/installinstallmacos.py" ]]; then
-                /bin/rm "$workdir/installinstallmacos.py"
-            fi
-            # use curl -o instead of > redirect, which causes permission error when run with sudo
-            /usr/bin/curl -H 'Cache-Control: no-cache' -s "$installinstallmacos_url" -o "$workdir/installinstallmacos.py"
-            if echo "$installinstallmacos_checksum  $workdir/installinstallmacos.py" | shasum -c; then
-                echo "   [get_installinstallmacos] downloaded new installinstallmacos.py successfully."
-            else    
-                echo "   [get_installinstallmacos] ERROR: downloaded installinstallmacos.py does not match checksum. Possible corrupted file. Deleting file."
-                /bin/rm "$workdir/installinstallmacos.py"
-            fi
-        fi
-    fi
-    # check it did actually get downloaded
-    if [[ ! -f "$workdir/installinstallmacos.py" ]]; then
-        echo "Could not download installinstallmacos.py so cannot continue."
-        exit 1
-    else
-        echo "   [get_installinstallmacos] installinstallmacos.py is in $workdir"
-        iim_downloaded=1
-    fi
-       
-}
+# get_installinstallmacos() {
+#     # grab installinstallmacos.py if not already there
+#     # note this does a SHA256 checksum check and will delete the file and exit if this fails
+#     if [[ ! -f "$workdir/installinstallmacos.py" || $force_installinstallmacos == "yes" ]]; then
+#         if [[ ! $no_curl ]]; then
+#             echo "   [get_installinstallmacos] Downloading installinstallmacos.py..."
+#             # delete existing version so curl can create new file 
+#             if [[ -f "$workdir/installinstallmacos.py" ]]; then
+#                 /bin/rm "$workdir/installinstallmacos.py"
+#             fi
+#             # use curl -o instead of > redirect, which causes permission error when run with sudo
+#             /usr/bin/curl -H 'Cache-Control: no-cache' -s "$installinstallmacos_url" -o "$workdir/installinstallmacos.py"
+#             if echo "$installinstallmacos_checksum  $workdir/installinstallmacos.py" | shasum -c; then
+#                 echo "   [get_installinstallmacos] downloaded new installinstallmacos.py successfully."
+#             else    
+#                 echo "   [get_installinstallmacos] ERROR: downloaded installinstallmacos.py does not match checksum. Possible corrupted file. Deleting file."
+#                 /bin/rm "$workdir/installinstallmacos.py"
+#             fi
+#         fi
+#     fi
+#     # check it did actually get downloaded
+#     if [[ ! -f "$workdir/installinstallmacos.py" ]]; then
+#         echo "Could not download installinstallmacos.py so cannot continue."
+#         exit 1
+#     else
+#         echo "   [get_installinstallmacos] installinstallmacos.py is in $workdir"
+#         iim_downloaded=1
+#     fi
+#        
+# }
 
-get_relocatable_python() {
-    # grab macadmins python and install it if not already there - used when running this script as a standalone
-    if [[ -L "$relocatable_python_path" && -e "$relocatable_python_path" ]]; then
-        echo "   [get_relocatable_python] Relocatable Python is installed in $workdir"
-        python_path="$relocatable_python_path"
-    elif [[ -L "$macadmins_python_path" && -e "$macadmins_python_path" ]]; then
-        echo "   [get_relocatable_python] MacAdmins Python is installed"
-        python_path="$macadmins_python_path"
-    else
-        if [[ ! $no_curl ]]; then
-            echo "   [get_relocatable_python] Downloading MacAdmins Python package..."
-            macadmins_python_pkg=$( /usr/bin/curl -sl -H "Accept: application/vnd.github.v3+json" "$macadmins_python_url" | grep signed | grep url | sed 's|^.*"browser_download_url": ||' | sed 's|\"||g' )
-            /usr/bin/curl -L "$macadmins_python_pkg" -o "$workdir/macadmins_python-$macadmins_python_version.pkg"
-            installer -pkg "$workdir/macadmins_python-$macadmins_python_version.pkg" -target /
-        fi
-        # check it did actually get downloaded
-        if [[ -L "$macadmins_python_path" && -e "$macadmins_python_path" ]]; then
-            echo "   [get_relocatable_python] MacAdmins Python is installed"
-            python_path="$macadmins_python_path"
-        else
-            echo "   [get_relocatable_python] Could not download MacAdmins Python."
-        fi
-    fi
-}
+# get_relocatable_python() {
+#     # grab macadmins python and install it if not already there - used when running this script as a standalone
+#     if [[ -L "$relocatable_python_path" && -e "$relocatable_python_path" ]]; then
+#         echo "   [get_relocatable_python] Relocatable Python is installed in $workdir"
+#         python_path="$relocatable_python_path"
+#     elif [[ -L "$macadmins_python_path" && -e "$macadmins_python_path" ]]; then
+#         echo "   [get_relocatable_python] MacAdmins Python is installed"
+#         python_path="$macadmins_python_path"
+#     else
+#         if [[ ! $no_curl ]]; then
+#             echo "   [get_relocatable_python] Downloading MacAdmins Python package..."
+#             macadmins_python_pkg=$( /usr/bin/curl -sl -H "Accept: application/vnd.github.v3+json" "$macadmins_python_url" | grep signed | grep url | sed 's|^.*"browser_download_url": ||' | sed 's|\"||g' )
+#             /usr/bin/curl -L "$macadmins_python_pkg" -o "$workdir/macadmins_python-$macadmins_python_version.pkg"
+#             installer -pkg "$workdir/macadmins_python-$macadmins_python_version.pkg" -target /
+#         fi
+#         # check it did actually get downloaded
+#         if [[ -L "$macadmins_python_path" && -e "$macadmins_python_path" ]]; then
+#             echo "   [get_relocatable_python] MacAdmins Python is installed"
+#             python_path="$macadmins_python_path"
+#         else
+#             echo "   [get_relocatable_python] Could not download MacAdmins Python."
+#         fi
+#     fi
+# }
 
 get_user_details() {
     # Apple Silicon devices require a username and password to run startosinstall
