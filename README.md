@@ -1,6 +1,10 @@
 # erase-install
 
-by Graham Pugh
+This is a hardened version of the erase-install script, in which we fully disabled all capabilities to download third party ressources (DEPNotify, installinstallmacos.py and python). We include them in the package we deploy, if we need them.
+
+----
+
+Original README by Graham Pugh:
 
 **WARNING. This is a self-destruct script. Do not try it out on your own device!**
 
