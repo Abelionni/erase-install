@@ -48,8 +48,8 @@ script_name="erase-install"
 version="25.0"
 
 # URL for downloading installinstallmacos.py
-installinstallmacos_url="https://raw.githubusercontent.com/grahampugh/macadmin-scripts/main/installinstallmacos.py"
-installinstallmacos_checksum="08ceb0187bd648e040c8ba23f79192f7d91b1250dbff47107c29cb2bca1ce433"
+# installinstallmacos_url="https://raw.githubusercontent.com/grahampugh/macadmin-scripts/main/installinstallmacos.py"
+# installinstallmacos_checksum="08ceb0187bd648e040c8ba23f79192f7d91b1250dbff47107c29cb2bca1ce433"
 
 # Directory in which to place the macOS installer. Overridden with --path
 installer_directory="/Applications"
@@ -58,16 +58,16 @@ installer_directory="/Applications"
 workdir="/Library/Management/erase-install"
 
 # URL for downloading macadmins python (with tag version) for standalone script running
-macadmins_python_version="v.3.9.5.09222021234106"
-macadmins_python_url="https://api.github.com/repos/macadmins/python/releases/tags/$macadmins_python_version"
-macadmins_python_path="/Library/ManagedFrameworks/Python/Python3.framework/Versions/Current/bin/python3"
+# macadmins_python_version="v.3.9.5.09222021234106"
+# macadmins_python_url="https://api.github.com/repos/macadmins/python/releases/tags/$macadmins_python_version"
+# macadmins_python_path="/Library/ManagedFrameworks/Python/Python3.framework/Versions/Current/bin/python3"
 
 # Dialog helper apps
 jamfHelper="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
 depnotify_app="/Applications/Utilities/DEPNotify.app"
 depnotify_log="/var/tmp/depnotify.log"
 depnotify_confirmation_file="/var/tmp/com.depnotify.provisioning.done"
-depnotify_download_url="https://files.nomad.menu/DEPNotify.pkg"
+# depnotify_download_url="https://files.nomad.menu/DEPNotify.pkg"
 
 
 ###################
