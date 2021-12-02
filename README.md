@@ -4,7 +4,7 @@ This is a hardened version of the erase-install script, in which we fully disabl
 
 ----
 
-by Graham Pugh
+Original README by Graham Pugh:
 
 **WARNING. This is a self-destruct script. Do not try it out on your own device!**
 
