@@ -5,6 +5,12 @@
 # shellcheck disable=SC2034
 # this is due to the dynamic variable assignments used in the localization strings
 
+###############
+# Abelionni note:
+# For hardening, we fully disabled all capacity of this script to download third party ressources (other than macOS installers).
+# We deploy the script as a standalone package including all ressources we need (DEPNotify, installinstallmacos.py…) 
+###############
+
 :<<DOC
 erase-install.sh
 by Graham Pugh
@@ -16,11 +22,6 @@ See README.md and the GitHub repo's Wiki for details on use.
 It is recommended to use the package installer of this script. It contains the bundled
 installinstallmacos.py fork, plus a relocatable python with which to run it.
 
-This script can, however, also be run standalone.
-It will download and install the MacAdmins Python Framework if not found.
-It will also download the installinstallmacos.py fork if it is not found.
-Suppress the downloads with the --no-curl option.
-
 Requirements:
 - macOS 12.4+
 - macOS 10.13.4+ (for --erase option)
@@ -29,12 +30,6 @@ Requirements:
 
 Original version of installinstallmacos.py - Greg Neagle; GitHub munki/macadmins-scripts
 DOC
-
-###############
-# Abelionni note:
-# For hardening, we fully disabled all capacity of this script to download third party ressources (other than macOS).
-# We deploy the script as a standalone package including installinstallmacos.py and DEPNotify 
-###############
 
 
 ###############
@@ -47,28 +42,17 @@ script_name="erase-install"
 # Version of this script
 version="25.0"
 
-# URL for downloading installinstallmacos.py
-# installinstallmacos_url="https://raw.githubusercontent.com/grahampugh/macadmin-scripts/main/installinstallmacos.py"
-# installinstallmacos_checksum="08ceb0187bd648e040c8ba23f79192f7d91b1250dbff47107c29cb2bca1ce433"
-
 # Directory in which to place the macOS installer. Overridden with --path
 installer_directory="/Applications"
 
 # Default working directory (may be overridden by the --workdir parameter)
 workdir="/Library/Management/erase-install"
 
-# URL for downloading macadmins python (with tag version) for standalone script running
-# macadmins_python_version="v.3.9.5.09222021234106"
-# macadmins_python_url="https://api.github.com/repos/macadmins/python/releases/tags/$macadmins_python_version"
-# macadmins_python_path="/Library/ManagedFrameworks/Python/Python3.framework/Versions/Current/bin/python3"
-
 # Dialog helper apps
 jamfHelper="/Library/Application Support/JAMF/bin/jamfHelper.app/Contents/MacOS/jamfHelper"
 depnotify_app="/Applications/Utilities/DEPNotify.app"
 depnotify_log="/var/tmp/depnotify.log"
 depnotify_confirmation_file="/var/tmp/com.depnotify.provisioning.done"
-# depnotify_download_url="https://files.nomad.menu/DEPNotify.pkg"
-
 
 ###################
 ## LOCALIZATIONS ##
@@ -373,9 +357,6 @@ check_installer_is_valid() {
 }
 
 check_newer_available() {
-    # Download installinstallmacos.py and MacAdmins python
-    get_installinstallmacos
-    get_relocatable_python
     if [[ ! -f "$python_path" ]]; then
         # fall back to python2
         python_path=$(which python)
@@ -794,89 +775,6 @@ find_extra_packages() {
     done
 }
 
-# get_depnotify() {
-#     # grab installinstallmacos.py if not already there
-#     # note this does a SHA256 checksum check and will delete the file and exit if this fails
-#     if [[ -d "$depnotify_app" ]]; then
-#         echo "   [get_depnotify] DEPNotify is installed ($depnotify_app)"
-#     else
-#         if [[ ! $no_curl ]]; then
-#             echo "   [get_depnotify] Downloading DEPNotify.app..."
-#             if /usr/bin/curl -L "$depnotify_download_url" -o "$workdir/DEPNotify.pkg" ; then
-#                 if ! installer -pkg "$workdir/DEPNotify.pkg" -target / ; then
-#                     echo "   [get_depnotify] DEPNotify installation failed"
-#                 fi
-#             else
-#                 echo "   [get_depnotify] DEPNotify download failed"
-#             fi
-#         fi
-#         # check it did actually get downloaded
-#         if [[ -d "$depnotify_app" ]]; then
-#             echo "   [get_depnotify] DEPNotify is installed"
-#             use_depnotify="yes"
-#             dep_notify_quit
-#         else
-#             echo "   [get_depnotify] Could not download DEPNotify.app."
-#         fi
-#     fi
-# }
-
-# get_installinstallmacos() {
-#     # grab installinstallmacos.py if not already there
-#     # note this does a SHA256 checksum check and will delete the file and exit if this fails
-#     if [[ ! -f "$workdir/installinstallmacos.py" || $force_installinstallmacos == "yes" ]]; then
-#         if [[ ! $no_curl ]]; then
-#             echo "   [get_installinstallmacos] Downloading installinstallmacos.py..."
-#             # delete existing version so curl can create new file 
-#             if [[ -f "$workdir/installinstallmacos.py" ]]; then
-#                 /bin/rm "$workdir/installinstallmacos.py"
-#             fi
-#             # use curl -o instead of > redirect, which causes permission error when run with sudo
-#             /usr/bin/curl -H 'Cache-Control: no-cache' -s "$installinstallmacos_url" -o "$workdir/installinstallmacos.py"
-#             if echo "$installinstallmacos_checksum  $workdir/installinstallmacos.py" | shasum -c; then
-#                 echo "   [get_installinstallmacos] downloaded new installinstallmacos.py successfully."
-#             else    
-#                 echo "   [get_installinstallmacos] ERROR: downloaded installinstallmacos.py does not match checksum. Possible corrupted file. Deleting file."
-#                 /bin/rm "$workdir/installinstallmacos.py"
-#             fi
-#         fi
-#     fi
-#     # check it did actually get downloaded
-#     if [[ ! -f "$workdir/installinstallmacos.py" ]]; then
-#         echo "Could not download installinstallmacos.py so cannot continue."
-#         exit 1
-#     else
-#         echo "   [get_installinstallmacos] installinstallmacos.py is in $workdir"
-#         iim_downloaded=1
-#     fi
-#        
-# }
-
-# get_relocatable_python() {
-#     # grab macadmins python and install it if not already there - used when running this script as a standalone
-#     if [[ -L "$relocatable_python_path" && -e "$relocatable_python_path" ]]; then
-#         echo "   [get_relocatable_python] Relocatable Python is installed in $workdir"
-#         python_path="$relocatable_python_path"
-#     elif [[ -L "$macadmins_python_path" && -e "$macadmins_python_path" ]]; then
-#         echo "   [get_relocatable_python] MacAdmins Python is installed"
-#         python_path="$macadmins_python_path"
-#     else
-#         if [[ ! $no_curl ]]; then
-#             echo "   [get_relocatable_python] Downloading MacAdmins Python package..."
-#             macadmins_python_pkg=$( /usr/bin/curl -sl -H "Accept: application/vnd.github.v3+json" "$macadmins_python_url" | grep signed | grep url | sed 's|^.*"browser_download_url": ||' | sed 's|\"||g' )
-#             /usr/bin/curl -L "$macadmins_python_pkg" -o "$workdir/macadmins_python-$macadmins_python_version.pkg"
-#             installer -pkg "$workdir/macadmins_python-$macadmins_python_version.pkg" -target /
-#         fi
-#         # check it did actually get downloaded
-#         if [[ -L "$macadmins_python_path" && -e "$macadmins_python_path" ]]; then
-#             echo "   [get_relocatable_python] MacAdmins Python is installed"
-#             python_path="$macadmins_python_path"
-#         else
-#             echo "   [get_relocatable_python] Could not download MacAdmins Python."
-#         fi
-#     fi
-# }
-
 get_user_details() {
     # Apple Silicon devices require a username and password to run startosinstall
     # get account name (short name)
@@ -1021,10 +919,6 @@ overwrite_existing_installer() {
 }
 
 run_installinstallmacos() {
-    # Download installinstallmacos.py and MacAdmins Python
-    get_installinstallmacos
-    get_relocatable_python
-
     # Use installinstallmacos.py to download the desired version of macOS
     installinstallmacos_args=()
     installinstallmacos_args+=("--workdir")
@@ -1466,8 +1360,6 @@ while test $# -gt 0 ; do
             if [[ -d "$depnotify_app" ]]; then
                 use_depnotify="yes"
                 dep_notify_quit
-            else
-                get_depnotify_app="yes"
             fi
             ;;
         --no-jamfhelper) jamfHelper=""
@@ -1627,11 +1519,6 @@ if [[ $erase == "yes" || $reinstall == "yes" ]]; then
         echo "* Remove the --test-run argument to perform the erase or reinstall."
         echo "**********************"
         echo
-    fi
-
-    # get DEPNotify if specified
-    if [[ $get_depnotify_app == "yes" ]]; then
-        get_depnotify
     fi
 
     # check there is enough space
